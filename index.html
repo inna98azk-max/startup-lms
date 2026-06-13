@@ -160,10 +160,10 @@ const segments = [
     name: "Кіріспе",
     desc: "Курсқа кіріспе: таргетолог ойлауы, қазіргі жағдайыңыз және таргетинг негіздері.",
     lessons: [
-      ["Мышление таргетолог", ["видео","текст"],"https://youtu.be/wmF1Na2JazI?si=7hCg7ohgCLuP4kSi"],
-      ["Қазіргі А точкаңыз қандай", ["видео","тапсырма"],"https://youtu.be/IHOBS73e5qM?si=9a5J9PZfuqlIbQrL"],
-      ["Таргет деген не?", ["видео","текст"],"https://youtu.be/x4HBLZyRSrU?si=ME7YLOgYAJdWUSSy"],
-      ["Таргетолог қызметіне не кіреді", ["видео","текст"],"https://youtu.be/2zfPC4M6xL4?si=0gca7q2oBJndY-Lf"],
+      ["Мышление таргетолог", ["видео","текст"]],
+      ["Қазіргі А точкаңыз қандай", ["видео","тапсырма"]],
+      ["Таргет деген не?", ["видео","текст"]],
+      ["Таргетолог қызметіне не кіреді", ["видео","текст"]],
     ]
   },
   {
@@ -297,6 +297,13 @@ function loadProgress(){
 }
 function saveProgress(){ try{ localStorage.setItem('startup_progress', JSON.stringify(progress)); }catch(e){} }
 
+function getYouTubeEmbed(url){
+  if(!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  if(m) return `https://www.youtube.com/embed/${m[1]}`;
+  return url; // allow direct embed/mp4 links too
+}
+
 function totalLessons(){ return segments.reduce((a,s)=>a+s.lessons.length,0); }
 function doneLessons(){ return Object.values(progress).filter(Boolean).length; }
 
@@ -333,9 +340,13 @@ function renderSegment(i){
   const list = document.getElementById('lesson-list');
   list.innerHTML = '';
   seg.lessons.forEach((lesson, j)=>{
-    const [title, types] = lesson;
+    const [title, types, videoUrl] = lesson;
     const key = i+'-'+j;
     const done = !!progress[key];
+    const embed = getYouTubeEmbed(videoUrl);
+    const videoBlock = embed
+      ? `<div class="video-placeholder" style="padding:0; overflow:hidden;"><iframe src="${embed}" style="width:100%; height:100%; border:0;" allowfullscreen></iframe></div>`
+      : `<div class="video-placeholder">▶ Видео орны (сілтемені осында қойыңыз)</div>`;
     const card = document.createElement('div');
     card.className = 'lesson-card';
     card.innerHTML = `
@@ -348,7 +359,7 @@ function renderSegment(i){
             ${types.map(t=>`<span class="type-pill">${t}</span>`).join('')}
           </div>
           <div class="lesson-detail">
-            <div class="video-placeholder">▶ Видео орны (сілтемені осында қойыңыз)</div>
+            ${videoBlock}
             <p>Бұл сабақтың қысқаша мазмұны мен түсіндірмесі осында жазылады. Видеоны көріп болғаннан кейін төмендегі тапсырманы орындаңыз.</p>
             <div class="materials">
               <a class="material-link" href="#" onclick="event.stopPropagation()">📄 Сабақ материалы</a>
