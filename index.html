@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>START UP — Кабинет ученика</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A;
+    --surface:#181D26;
+    --surface2:#1F2530;
+    --line:#2A313D;
+    --text:#EDEBE6;
+    --muted:#8B939F;
+    --accent:#8CFFC1;
+    --accent-dim:#3E5C4D;
+    --warn:#FF7A5C;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* LOGIN */
+  #login-screen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(140,255,193,0.06), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(255,122,92,0.05), transparent 40%),
+      var(--bg);
+  }
+  .login-card{width:100%; max-width:380px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:36px 32px;}
+  .login-tag{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--accent); text-transform:uppercase; margin-bottom:16px;}
+  .login-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:28px; line-height:1.2; margin-bottom:8px;}
+  .login-sub{color:var(--muted); font-size:14px; margin-bottom:28px; line-height:1.5;}
+  .field-label{font-size:12px; color:var(--muted); margin-bottom:6px; display:block;}
+  #passcode{width:100%; padding:14px 16px; border-radius:10px; border:1px solid var(--line); background:var(--surface2); color:var(--text); font-size:15px; font-family:'JetBrains Mono',monospace; letter-spacing:0.05em; outline:none; transition:border-color .15s;}
+  #passcode:focus{border-color:var(--accent);}
+  .login-btn{width:100%; margin-top:18px; padding:14px 16px; border-radius:10px; border:none; background:var(--accent); color:#0E1612; font-weight:600; font-size:15px; cursor:pointer; transition:opacity .15s;}
+  .login-btn:hover{opacity:0.88;}
+  .login-error{color:var(--warn); font-size:13px; margin-top:12px; min-height:18px;}
+
+  /* APP SHELL */
+  #app{display:none; min-height:100vh;}
+  #app.active{display:flex;}
+
+  .sidebar{
+    width:300px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line);
+    padding:28px 20px; display:flex; flex-direction:column; gap:24px; height:100vh;
+    overflow-y:auto; position:sticky; top:0;
+  }
+  .brand{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; letter-spacing:-0.01em;}
+  .brand span{color:var(--accent);}
+
+  .overall-progress{background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:14px 16px;}
+  .overall-progress .label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;}
+  .overall-progress .bar{height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin-bottom:8px;}
+  .overall-progress .bar-fill{height:100%; background:var(--accent); border-radius:3px; transition:width .3s;}
+  .overall-progress .count{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text);}
+
+  .seg-nav{display:flex; flex-direction:column; gap:4px; flex:1;}
+  .seg-nav-title{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; margin:8px 0 4px 4px;}
+  .seg-item{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; cursor:pointer; transition:background .12s; border:1px solid transparent;}
+  .seg-item:hover{background:var(--surface2);}
+  .seg-item.active{background:var(--surface2); border-color:var(--accent-dim);}
+  .seg-num{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); width:34px; flex-shrink:0;}
+  .seg-item.active .seg-num{color:var(--accent);}
+  .seg-name{font-size:13.5px; line-height:1.35;}
+  .seg-dot{margin-left:auto; width:8px; height:8px; border-radius:50%; background:var(--line); flex-shrink:0;}
+  .seg-dot.done{background:var(--accent);}
+
+  .logout-btn{font-size:12px; color:var(--muted); background:none; border:none; text-align:left; cursor:pointer; padding:6px 4px;}
+  .logout-btn:hover{color:var(--text);}
+
+  /* MAIN */
+  .main{flex:1; padding:40px 48px; max-width:920px;}
+  .main-header{margin-bottom:32px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:10px;}
+  .main-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:32px; margin-bottom:10px;}
+  .main-desc{color:var(--muted); font-size:14.5px; max-width:600px; line-height:1.6;}
+
+  .lesson-list{display:flex; flex-direction:column; gap:12px;}
+  .lesson-card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 20px; cursor:pointer; transition:border-color .12s, background .12s;}
+  .lesson-card:hover{border-color:var(--accent-dim);}
+  .lesson-top{display:flex; align-items:flex-start; gap:14px;}
+  .lesson-check{width:22px; height:22px; border-radius:6px; border:1.5px solid var(--line); flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:13px; transition:background .12s, border-color .12s;}
+  .lesson-check.done{background:var(--accent); border-color:var(--accent); color:#0E1612;}
+  .lesson-body{flex:1;}
+  .lesson-num{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); margin-bottom:4px;}
+  .lesson-name{font-size:15px; font-weight:500;}
+  .lesson-types{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+  .type-pill{font-size:10.5px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em; padding:3px 8px; border-radius:5px; background:var(--surface2); color:var(--muted); border:1px solid var(--line);}
+
+  .lesson-detail{display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); font-size:14px; color:var(--text); line-height:1.7;}
+  .lesson-card.open .lesson-detail{display:block;}
+  .video-placeholder{width:100%; aspect-ratio:16/9; background:var(--surface2); border:1px solid var(--line); border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; margin-bottom:14px; font-family:'JetBrains Mono',monospace;}
+  .lesson-detail p{margin-bottom:10px; color:var(--muted);}
+  .materials{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .material-link{font-size:12.5px; color:var(--accent); text-decoration:none; border:1px solid var(--accent-dim); padding:6px 12px; border-radius:8px; font-family:'JetBrains Mono',monospace;}
+  .material-link:hover{background:rgba(140,255,193,0.07);}
+
+  @media (max-width:800px){
+    #app.active{flex-direction:column;}
+    .sidebar{width:100%; height:auto; position:relative; flex-direction:row; flex-wrap:wrap; align-items:center;}
+    .seg-nav{display:none;}
+    .overall-progress{flex:1;}
+    .main{padding:28px 20px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-tag">START UP · Таргетология</div>
+    <div class="login-title">Кабинет ученика</div>
+    <div class="login-sub">Курс бойынша барлық сабақтар, видео және материалдар осында жиналған. Кодты Sabina-дан алдыңыз.</div>
+    <label class="field-label" for="passcode">Кіру коды</label>
+    <input id="passcode" type="password" placeholder="••••••••" autocomplete="off">
+    <button class="login-btn" onclick="tryLogin()">Кіру</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">START UP <span>// LMS</span></div>
+
+    <div class="overall-progress">
+      <div class="label">Жалпы прогресс</div>
+      <div class="bar"><div class="bar-fill" id="overall-bar"></div></div>
+      <div class="count mono" id="overall-count">0 / 0 сабақ</div>
+    </div>
+
+    <div class="seg-nav" id="seg-nav">
+      <div class="seg-nav-title">Модульдер</div>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">← Шығу</button>
+  </aside>
+
+  <main class="main">
+    <div class="main-header">
+      <div class="eyebrow mono" id="seg-eyebrow">МОДУЛЬ · 0</div>
+      <div class="main-title" id="seg-title">Модуль атауы</div>
+      <div class="main-desc" id="seg-desc">Модуль сипаттамасы.</div>
+    </div>
+    <div class="lesson-list" id="lesson-list"></div>
+  </main>
+</div>
+
+<script>
+const PASSCODE = "start250";
+
+const segments = [
+  {
+    num: 0,
+    name: "Кіріспе",
+    desc: "Курсқа кіріспе: таргетолог ойлауы, қазіргі жағдайыңыз және таргетинг негіздері.",
+    lessons: [
+      ["Мышление таргетолог", ["видео","текст"]],
+      ["Қазіргі А точкаңыз қандай", ["видео","тапсырма"]],
+      ["Таргет деген не?", ["видео","текст"]],
+      ["Таргетолог қызметіне не кіреді", ["видео","текст"]],
+    ]
+  },
+  {
+    num: 1,
+    name: "Таргеттегі маркетинг",
+    desc: "Маркетинг негіздері: мақсат қою, аудиторияны түсіну, стратегия және воронка құру.",
+    lessons: [
+      ["Мақсат қою және нәтиже", ["видео","текст"]],
+      ["Аудиторияны 5 деңгей бойынша түсіну (Бен Хант лестницасы)", ["видео","текст","тапсырма"]],
+      ["Стратегия құру", ["видео","текст"]],
+      ["Воронка продаж", ["видео","текст"]],
+      ["Брифинг", ["видео","материал"]],
+      ["Мақсатты аудитория", ["видео","тапсырма"]],
+      ["Конкуренттерге анализ", ["видео","тапсырма"]],
+      ["Майнд-картамен жұмыс", ["видео","материал"]],
+    ]
+  },
+  {
+    num: 2,
+    name: "Фейзбук құрылымы",
+    desc: "Meta аккаунттарын құру және баптау: Business Manager, Ads Manager, доступтар.",
+    lessons: [
+      ["Фейзбук ережелері", ["видео","текст"]],
+      ["Фейзбук құрылымы (структурасы)", ["видео","текст"]],
+      ["БС ашу, Instagram тіркеу", ["видео","тапсырма"]],
+      ["БМ (Business Manager) ашу", ["видео","тапсырма"]],
+      ["РА ашу, карта тіркеу, налог өшіру", ["видео","текст"]],
+      ["БМ-ге басқа адамға доступ ашу", ["видео","текст"]],
+    ]
+  },
+  {
+    num: 3,
+    name: "Креатив",
+    desc: "Жарнамалық креатив жасау: офферден бастап видео/сторис форматына дейін.",
+    lessons: [
+      ["Креатив деген не және ережелері", ["видео","текст"]],
+      ["Оффер және триггер", ["видео","текст"]],
+      ["Өтімді тақырып (заголовок) формулалары", ["видео","материал"]],
+      ["CapCut арқылы креатив жасау", ["видео","тапсырма"]],
+      ["Stories арқылы креатив", ["видео","тапсырма"]],
+      ["Дауыстау (озвучка) форматында креатив жасау", ["видео","тапсырма"]],
+    ]
+  },
+  {
+    num: 4,
+    name: "Науқан іске қосу (Запуск)",
+    desc: "Ads Manager-де науқан құру: мақсаттар, пиксель, лид генерация, конверсия.",
+    lessons: [
+      ["Ads Manager (жарнама кабинетімен) танысу", ["видео","текст"]],
+      ["Таргеттегі мақсаттар", ["видео","текст"]],
+      ["Трафик мақсатында таргет", ["видео","тапсырма"]],
+      ["Тартылым (вовлеченность) мақсатында таргет", ["видео","тапсырма"]],
+      ["Лид генерация арқылы таргет", ["видео","тапсырма"]],
+      ["Лидтерді жүктеу: Drive және API арқылы автоматтандыру", ["видео","материал"]],
+      ["Пиксель орнату", ["видео","текст","материал"]],
+      ["Конверсия мақсатында жіберу", ["видео","тапсырма"]],
+    ]
+  },
+  {
+    num: 5,
+    name: "Жарнамаға анализ",
+    desc: "Нәтижелерді оқу, масштабтау және клиентке есеп беру.",
+    lessons: [
+      ["Метрикалар", ["видео","текст"]],
+      ["Масштабирование", ["видео","тапсырма"]],
+      ["РНП (нәтиже) бойынша есеп дайындау", ["видео","материал"]],
+    ]
+  },
+  {
+    num: 6,
+    name: "Блокировка",
+    desc: "Аккаунт блокировкасы: түрлері, шығу жолдары және алдын алу.",
+    lessons: [
+      ["Блокировка түрлері (майнд-картамен)", ["видео","текст"]],
+      ["Блокировкадан шығу жолдары", ["видео","тапсырма"]],
+      ["Антидетект браузер (Dolphin / Incogniton)", ["видео","материал"]],
+      ["Прокси орнату", ["видео","тапсырма"]],
+    ]
+  },
+  {
+    num: 7,
+    name: "Бонус сабақтар",
+    desc: "Қосымша дағдылар: жеке бренд, чат-бот, клиент табу және кейстер.",
+    lessons: [
+      ["Таргетологтың жеке бренді", ["видео","текст"]],
+      ["Чат-бот арқылы подписчик көбейту", ["видео","тапсырма"]],
+      ["Клиент табу жолдары", ["видео","текст","материал"]],
+      ["Мебель нишасымен жұмыс (кейс)", ["видео","материал"]],
+      ["Рассылка фундаменті", ["видео","текст"]],
+    ]
+  },
+  {
+    num: 8,
+    name: "Сайт жасау",
+    desc: "Курс/іс үшін қарапайым сайт құру жолдары: Tilda, Taplink және GitHub арқылы орналастыру.",
+    lessons: [
+      ["Tilda арқылы сайт жасау", ["видео","тапсырма"]],
+      ["Taplink арқылы сайт жасау", ["видео","тапсырма"]],
+      ["GitHub платформасы арқылы сайт орналастыру", ["видео","материал"]],
+    ]
+  },
+];
+
+let progress = {};
+let currentSeg = 0;
+
+function tryLogin(){
+  const val = document.getElementById('passcode').value.trim();
+  const err = document.getElementById('login-error');
+  if(val === PASSCODE){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('active');
+    loadProgress();
+    renderSidebar();
+    renderSegment(0);
+  } else {
+    err.textContent = "Код қате. Қайта тексеріп көріңіз.";
+  }
+}
+document.getElementById('passcode').addEventListener('keydown', e=>{ if(e.key === 'Enter') tryLogin(); });
+
+function logout(){
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('passcode').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+function loadProgress(){
+  try{ const raw = localStorage.getItem('startup_progress'); if(raw) progress = JSON.parse(raw); }catch(e){ progress = {}; }
+}
+function saveProgress(){ try{ localStorage.setItem('startup_progress', JSON.stringify(progress)); }catch(e){} }
+
+function totalLessons(){ return segments.reduce((a,s)=>a+s.lessons.length,0); }
+function doneLessons(){ return Object.values(progress).filter(Boolean).length; }
+
+function renderSidebar(){
+  const nav = document.getElementById('seg-nav');
+  nav.querySelectorAll('.seg-item').forEach(n=>n.remove());
+  segments.forEach((seg, i)=>{
+    const allDone = seg.lessons.every((_,j)=>progress[i+'-'+j]);
+    const el = document.createElement('div');
+    el.className = 'seg-item' + (i===currentSeg ? ' active':'');
+    el.innerHTML = `<span class="seg-num mono">${String(seg.num).padStart(2,'0')}</span>
+                     <span class="seg-name">${seg.name}</span>
+                     <span class="seg-dot ${allDone?'done':''}"></span>`;
+    el.onclick = ()=>renderSegment(i);
+    nav.appendChild(el);
+  });
+  updateOverall();
+}
+
+function updateOverall(){
+  const total = totalLessons();
+  const done = doneLessons();
+  document.getElementById('overall-bar').style.width = (total? done/total*100:0)+'%';
+  document.getElementById('overall-count').textContent = `${done} / ${total} сабақ`;
+}
+
+function renderSegment(i){
+  currentSeg = i;
+  const seg = segments[i];
+  document.getElementById('seg-eyebrow').textContent = `МОДУЛЬ · ${seg.num}`;
+  document.getElementById('seg-title').textContent = seg.name;
+  document.getElementById('seg-desc').textContent = seg.desc;
+
+  const list = document.getElementById('lesson-list');
+  list.innerHTML = '';
+  seg.lessons.forEach((lesson, j)=>{
+    const [title, types] = lesson;
+    const key = i+'-'+j;
+    const done = !!progress[key];
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+    card.innerHTML = `
+      <div class="lesson-top">
+        <div class="lesson-check ${done?'done':''}">${done?'✓':''}</div>
+        <div class="lesson-body">
+          <div class="lesson-num mono">САБАҚ ${j+1}</div>
+          <div class="lesson-name">${title}</div>
+          <div class="lesson-types">
+            ${types.map(t=>`<span class="type-pill">${t}</span>`).join('')}
+          </div>
+          <div class="lesson-detail">
+            <div class="video-placeholder">▶ Видео орны (сілтемені осында қойыңыз)</div>
+            <p>Бұл сабақтың қысқаша мазмұны мен түсіндірмесі осында жазылады. Видеоны көріп болғаннан кейін төмендегі тапсырманы орындаңыз.</p>
+            <div class="materials">
+              <a class="material-link" href="#" onclick="event.stopPropagation()">📄 Сабақ материалы</a>
+              <a class="material-link" href="#" onclick="event.stopPropagation()">📋 Тапсырма</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', (e)=>{
+      if(e.target.classList.contains('lesson-check')){
+        progress[key] = !progress[key];
+        saveProgress();
+        renderSegment(i);
+        renderSidebar();
+        return;
+      }
+      card.classList.toggle('open');
+    });
+    list.appendChild(card);
+  });
+  renderSidebar();
+}
+</script>
+</body>
+</html>
